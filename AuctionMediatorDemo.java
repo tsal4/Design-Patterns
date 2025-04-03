@@ -1,4 +1,6 @@
+package MediatorDesignPattern;
 /*
+
 This program violates the Mediator Pattern with some issues in:
 
 1. AuctionHouse Class
@@ -15,6 +17,7 @@ import java.util.List;
 interface AuctionMediator {
     void registerBidder(Bidder bidder);
     void placeBid(Bidder bidder, double amount);
+    void notifyOthers(Bidder sender, String message);
 }
 
 // Concrete Mediator (Auction House)
@@ -46,9 +49,14 @@ class AuctionHouse implements AuctionMediator {
             }
         }
     }
-
-    public List<Bidder> getBidders() { 
-        return bidders;
+    
+    @Override
+    public void notifyOthers(Bidder sender, String message) {
+    	for (Bidder bidder : bidders) {
+    		if (bidder != sender) {
+    			bidder.receiveNotification(sender.getName() + " says: " + message);
+    		}
+    	}
     }
 
     public void closeAuction() {
@@ -64,12 +72,10 @@ class AuctionHouse implements AuctionMediator {
 class Bidder {
     private String name;
     private AuctionMediator mediator;
-    private List<Bidder> otherBidders; 
 
-    public Bidder(AuctionMediator mediator, String name, List<Bidder> otherBidders) {
+    public Bidder(AuctionMediator mediator, String name) {
         this.mediator = mediator;
         this.name = name;
-        this.otherBidders = otherBidders; 
         mediator.registerBidder(this);
     }
 
@@ -79,9 +85,7 @@ class Bidder {
     }
 
     public void notifyOthers(String message) { 
-        for (Bidder bidder : otherBidders) {
-            bidder.receiveNotification(name + " says: " + message);
-        }
+        mediator.notifyOthers(this, message);
     }
 
     public void receiveNotification(String message) {
@@ -99,9 +103,9 @@ public class AuctionMediatorDemo {
         AuctionHouse auctionHouse = new AuctionHouse();
 
         
-        Bidder alice = new Bidder(auctionHouse, "Alice", auctionHouse.getBidders());
-        Bidder bob = new Bidder(auctionHouse, "Bob", auctionHouse.getBidders());
-        Bidder charlie = new Bidder(auctionHouse, "Charlie", auctionHouse.getBidders());
+        Bidder alice = new Bidder(auctionHouse, "Alice");
+        Bidder bob = new Bidder(auctionHouse, "Bob");
+        Bidder charlie = new Bidder(auctionHouse, "Charlie");
 
         alice.placeBid(100);
         bob.placeBid(120);
